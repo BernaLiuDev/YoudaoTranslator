@@ -3,13 +3,14 @@
 # Falls back to Node.js if no native binary matches the current arch.
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-
 case "$(uname -m)" in
-  arm64)  exec "$DIR/txiki-arm64"  "$@" ;;
-  x86_64) exec "$DIR/txiki-x86_64" "$@" ;;
+  arm64)  BIN="$DIR/txiki-arm64" ;;
+  x86_64) BIN="$DIR/txiki-x86_64" ;;
 esac
-
-# Neither binary matched — try system Node.js
+if [ -n "$BIN" ] && [ -x "$BIN" ]; then
+  exec "$BIN" run "$@"
+fi
+# Native binary not available — try system Node.js
 if command -v node >/dev/null 2>&1; then
   exec node "$@"
 fi
