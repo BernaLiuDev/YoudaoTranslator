@@ -8,11 +8,81 @@ Alfred 中英文自动翻译工作流
 
 ![screenshot](screenshots/screenshot_1.png)
 
-## V4 更新说明
+## V4.0.1 Update Notes
 
-**解决 Apple Silicon (M1/M2/M3/M4) Mac 兼容问题。** V3 自带的 txiki 运行时仅支持 x86_64，在未安装 Rosetta 2 的 arm64 Mac 上无法运行（`bad CPU type in executable`）。
+### Problem
 
-V4 使用多架构 txiki 运行时 + shell wrapper 自动检测 CPU 架构，**Intel 和 Apple Silicon Mac 均无需安装任何依赖即可使用**。
+The V3 release bundled a txiki.js runtime compiled for x86_64 only. On Apple Silicon (M1/M2/M3/M4) Macs without Rosetta 2, Alfred fails with:
+
+```
+bad CPU type in executable: txiki
+```
+
+V4 resolved this with a multi-architecture runtime and automatic CPU detection. V4.0.1 fixes a CLI compatibility issue introduced by newer txiki.js versions.
+
+### Solution
+
+**Core principle:** no external dependencies, same "download and go" experience as V3, now working on both Intel and Apple Silicon Macs.
+
+The approach:
+
+1. **Dual-architecture txiki binaries** — matching arm64 and x86_64 txiki.js runtimes are downloaded automatically at build time
+2. **Shell wrapper with auto-detection** — the original `runtime/txiki` binary is replaced with a shell script that picks the right binary based on `uname -m`
+3. **Node.js fallback** — if neither native binary is available, falls back to system Node.js
+
+### Normal Execution Flow
+
+Users download the Release package (with both txiki binaries baked in), double-click to import into Alfred, and it just works:
+
+```
+User types yd hello
+        │
+        ▼
+  runtime/txiki (shell wrapper)
+        │
+   uname -m detection
+   ┌────┴────┐
+  arm64    x86_64
+    │         │
+    ▼         ▼
+txiki-arm64  txiki-x86_64     ← same version, auto-downloaded at build
+  run exec    run exec
+    │         │
+    └────┬────┘
+         │
+         ▼
+  Translation returned to Alfred
+```
+
+### Fallback Strategy
+
+The shell wrapper falls back to system Node.js in two scenarios:
+
+1. **Running from source** — repository cloned but `npm run build` hasn't been executed yet, no txiki binaries in `runtime/`
+2. **Unknown CPU architecture** — a future architecture where `uname -m` is neither arm64 nor x86_64
+
+Fallback chain:
+
+```
+runtime/txiki (shell wrapper)
+        │
+   uname -m detection
+        │
+   binary missing or arch mismatch
+        │
+        ▼
+  command -v node check
+   ┌────┴────┐
+  found     not found
+    │          │
+    ▼          ▼
+node exec   error message
+           exit code 1
+```
+
+### User Impact
+
+**Zero.** No Rosetta 2, no Node.js, no extra configuration needed. Download → double-click to import → type `yd hello` → translated.
 
 ## 特性
 
