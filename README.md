@@ -10,6 +10,11 @@ Alfred 中英文自动翻译工作流
 
 ## V4.0.1 Update Notes
 
+### Changelog
+
+- **`runtime/txiki` wrapper** — Added `run` subcommand for txiki.js v26.6.0+ CLI compatibility; added binary existence check to prevent premature exit
+- **`src/runtime.ts`** — Updated `getEnv()` to support txiki.js v26.6.0's new `tjs.env` object API (replaces the removed `tjs.getenv()` function)
+
 ### Problem
 
 The V3 release bundled a txiki.js runtime compiled for x86_64 only. On Apple Silicon (M1/M2/M3/M4) Macs without Rosetta 2, Alfred fails with:
@@ -18,7 +23,7 @@ The V3 release bundled a txiki.js runtime compiled for x86_64 only. On Apple Sil
 bad CPU type in executable: txiki
 ```
 
-V4 resolved this with a multi-architecture runtime and automatic CPU detection. V4.0.1 fixes a CLI compatibility issue introduced by newer txiki.js versions.
+V4 resolved this with a multi-architecture runtime and automatic CPU detection. V4.0.1 fixes two breaking changes introduced in txiki.js v26.6.0: the new `run` subcommand requirement and the `tjs.getenv()` → `tjs.env` API migration.
 
 ### Solution
 
